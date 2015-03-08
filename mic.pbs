@@ -1,0 +1,27 @@
+#!/bin/bash
+###specify the queue of job
+#PBS -q mic
+
+###specify the name of job
+#PBS -N micJob
+
+
+###Submit to specified nodes: If mic program , use 24 cores on one node.
+#PBS -l nodes=1:ppn=24
+
+###prepare env for computing
+source /home/opt/intel/bin/compilervars.sh intel64
+source /home/opt/intel/bin/iccvars.sh intel64
+source /home/opt/intel/impi/5.0.2.044/bin64/mpivars.sh intel64
+export  LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/opt/intel/mic/coi/host-linux-release/lib/
+
+cat $PBS_NODEFILE > $PBS_O_WORKDIR/hosts.${PBS_JOBID}
+NP=`cat $PBS_NODEFILE | wc -l`
+###just replace mic_program with your input file,optional argument lists. for mpi
+cd $PBS_O_WORKDIR
+/home/opt/intel/impi_5.0.2/intel64/bin/mpirun -np $NP -machinefile $PBS_O_WORKDIR/hosts.${PBS_JOBID} ./mic_program
+
+###If openmp
+#./mic_program
+
+rm -f $PBS_O_WORKDIR/hosts.${PBS_JOBID}

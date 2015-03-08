@@ -1,0 +1,9 @@
+#!/bin/bash
+
+###specify the name of job
+#PBS -N serial
+
+###just replace cpi-mpich with your input file
+cd $PBS_O_WORKDIR
+
+./sum.sh

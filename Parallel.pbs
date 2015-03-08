@@ -1,0 +1,22 @@
+#!/bin/bash
+
+###specify the name of job
+#PBS -N parallel
+
+###Submit to specified nodes
+#PBS -l nodes=2:ppn=24
+
+###prepare env for computing
+source /home/opt/intel/bin/compilervars.sh intel64
+source /home/opt/intel/bin/iccvars.sh intel64
+source /home/opt/intel/impi_5.0.2/bin64/mpivars.sh intel64
+export  LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/opt/intel/mic/coi/host-linux-release/lib/
+
+cat $PBS_NODEFILE > $PBS_O_WORKDIR/hosts.${PBS_JOBID}
+NP=`cat $PBS_NODEFILE | wc -l`
+###just replace cpi-mpich with your input file,optional argument lists.
+cd $PBS_O_WORKDIR
+
+/home/opt/intel/impi_5.0.2/bin64/mpirun -np $NP -machinefile $PBS_O_WORKDIR/hosts.${PBS_JOBID} ./test.o
+
+rm -f $PBS_O_WORKDIR/hosts.${PBS_JOBID}
