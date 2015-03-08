@@ -125,6 +125,7 @@ void Benchmark::gridKernel(const int support,
 {
     const int sSize = 2 * support + 1;
 
+#pragma omp parallel for
     for (int dind = 0; dind < int(samples.size()); ++dind) {
         // The actual grid point from which we offset
         int gind = samples[dind].iu + gSize * samples[dind].iv - support;

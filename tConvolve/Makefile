@@ -25,7 +25,7 @@
 #
 #
 CXX=icpc 
-CFLAGS=
+CFLAGS=-xHost -O3 -openmp
 
 EXENAME = tConvolve
 OBJS = tConvolveMPI.o Stopwatch.o Benchmark.o
