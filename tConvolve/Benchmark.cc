@@ -131,21 +131,26 @@ void Benchmark::gridKernel(const int support,
 
         // The Convoluton function point from which we offset
 
-#pragma omp parallel for
-        for (int suppv = 0,
-                 gind = samples[dind].iu + gSize * samples[dind].iv - support,
-                 cind = samples[dind].cOffset;
-             suppv < sSize;
-             suppv++,
-                 gind += gSize,
-                 cind += sSize) {
-            Value* gptr = &grid[gind];
-            const Value* cptr = &C[cind];
+#pragma omp for
+        for (int suppv = 0; suppv < sSize; suppv++) {
+            int gind = samples[dind].iu + gSize * samples[dind].iv - support;
+            gind += gSize * suppv;
+
+            int cind = samples[dind].cOffset;
+            cind += sSize * suppv;
+
             const Value d = samples[dind].data;
 
-#pragma omp critical
+#pragma omp for
             for (int suppu = 0; suppu < sSize; suppu++) {
-                *(gptr++) += d * (*(cptr++));
+                Value* gptr = &grid[gind];
+                gptr += suppu;
+
+                const Value* cptr = &C[cind];
+                cptr += suppu;
+
+#pragma omp critical
+                *(gptr) += d * (*(cptr));
             }
         }
     }
