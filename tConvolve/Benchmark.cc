@@ -64,7 +64,7 @@ void Benchmark::init()
       printf("cannot open file\n");
       return;
     }
-    
+
     for (int i = 0; i < nSamples; i++) {
         if(fread(&rd,sizeof(Coord),1,fp)!=1){printf("Rand number read error!\n");}
         u[i] = baseline * rd - baseline / 2;
@@ -127,22 +127,28 @@ void Benchmark::gridKernel(const int support,
 
 #pragma omp parallel for
     for (int dind = 0; dind < int(samples.size()); ++dind) {
-        // The actual grid point from which we offset
-        int gind = samples[dind].iu + gSize * samples[dind].iv - support;
 
-        // The Convoluton function point from which we offset
-        int cind = samples[dind].cOffset;
-
+#pragma omp parallel for
         for (int suppv = 0; suppv < sSize; suppv++) {
-            Value* gptr = &grid[gind];
-            const Value* cptr = &C[cind];
-            const Value d = samples[dind].data;
-            for (int suppu = 0; suppu < sSize; suppu++) {
-                *(gptr++) += d * (*(cptr++));
-            }
+            int gind = samples[dind].iu + gSize * samples[dind].iv - support;
+            gind += gSize * suppv;
 
-            gind += gSize;
-            cind += sSize;
+            int cind = samples[dind].cOffset;
+            cind += sSize * suppv;
+
+            const Value d = samples[dind].data;
+
+#pragma omp parallel for
+            for (int suppu = 0; suppu < sSize; suppu++) {
+                Value* gptr = &grid[gind];
+                gptr += suppu;
+
+                const Value* cptr = &C[cind];
+                cptr += suppu;
+
+#pragma omp critical
+                *(gptr) += d * (*(cptr));
+            }
         }
     }
 }
@@ -283,7 +289,7 @@ void Benchmark::printGrid()
   {
     printf("cannot open file\n");
     return;
-  }  
+  }
 
   unsigned ij;
   for (int i = 0; i < gSize; i++)
@@ -292,11 +298,11 @@ void Benchmark::printGrid()
     {
       ij=j+i*gSize;
       if(fwrite(&grid[ij],sizeof(Value),1,fp)!=1)
-        printf("File write error!\n"); 
+        printf("File write error!\n");
 
     }
   }
-  
+
   fclose(fp);
 }
 
