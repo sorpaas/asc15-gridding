@@ -64,7 +64,7 @@ void Benchmark::init()
       printf("cannot open file\n");
       return;
     }
-    
+
     for (int i = 0; i < nSamples; i++) {
         if(fread(&rd,sizeof(Coord),1,fp)!=1){printf("Rand number read error!\n");}
         u[i] = baseline * rd - baseline / 2;
@@ -128,21 +128,25 @@ void Benchmark::gridKernel(const int support,
 #pragma omp parallel for
     for (int dind = 0; dind < int(samples.size()); ++dind) {
         // The actual grid point from which we offset
-        int gind = samples[dind].iu + gSize * samples[dind].iv - support;
 
         // The Convoluton function point from which we offset
-        int cind = samples[dind].cOffset;
 
-        for (int suppv = 0; suppv < sSize; suppv++) {
+#pragma omp parallel for
+        for (int suppv = 0,
+                 gind = samples[dind].iu + gSize * samples[dind].iv - support,
+                 cind = samples[dind].cOffset;
+             suppv < sSize;
+             suppv++,
+                 gind += gSize,
+                 cind += sSize) {
             Value* gptr = &grid[gind];
             const Value* cptr = &C[cind];
             const Value d = samples[dind].data;
+
+#pragma omp critical
             for (int suppu = 0; suppu < sSize; suppu++) {
                 *(gptr++) += d * (*(cptr++));
             }
-
-            gind += gSize;
-            cind += sSize;
         }
     }
 }
@@ -283,7 +287,7 @@ void Benchmark::printGrid()
   {
     printf("cannot open file\n");
     return;
-  }  
+  }
 
   unsigned ij;
   for (int i = 0; i < gSize; i++)
@@ -292,11 +296,11 @@ void Benchmark::printGrid()
     {
       ij=j+i*gSize;
       if(fwrite(&grid[ij],sizeof(Value),1,fp)!=1)
-        printf("File write error!\n"); 
+        printf("File write error!\n");
 
     }
   }
-  
+
   fclose(fp);
 }
 
