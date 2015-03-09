@@ -127,11 +127,8 @@ void Benchmark::gridKernel(const int support,
 
 #pragma omp parallel for
     for (int dind = 0; dind < int(samples.size()); ++dind) {
-        // The actual grid point from which we offset
 
-        // The Convoluton function point from which we offset
-
-#pragma omp for
+#pragma omp parallel for
         for (int suppv = 0; suppv < sSize; suppv++) {
             int gind = samples[dind].iu + gSize * samples[dind].iv - support;
             gind += gSize * suppv;
@@ -141,7 +138,7 @@ void Benchmark::gridKernel(const int support,
 
             const Value d = samples[dind].data;
 
-#pragma omp for
+#pragma omp parallel for
             for (int suppu = 0; suppu < sSize; suppu++) {
                 Value* gptr = &grid[gind];
                 gptr += suppu;
